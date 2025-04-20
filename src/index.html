@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俄罗斯方块</title>
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff6b6b;
+            --accent-color: #6bffb4;
+            --background-dark: #121212;
+            --grid-color: rgba(255, 255, 255, 0.1);
+            --score-bg: rgba(255, 255, 255, 0.08);
+            --cell-glow: 0 0 10px;
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 2rem;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: scale(1);
+            transition: transform 0.3s ease;
+        }
+
+        .game-container:hover {
+            transform: scale(1.01);
+        }
+
+        .game-grid {
+            width: 300px;
+            height: 600px;
+            border: 2px solid var(--grid-color);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-grid div {
+            width: 30px;
+            height: 30px;
+            float: left;
+            border: 1px solid var(--grid-color);
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .game-grid div.filled {
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .game-info {
+            width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: var(--score-bg);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .score, .level, .lines {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .score {
+            color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(74, 107, 255, 0.1);
+        }
+
+        .level {
+            color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(107, 255, 180, 0.1);
+        }
+
+        .lines {
+            color: var(--secondary-color);
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.1);
+        }
+
+        .next-piece {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .next-piece h3 {
+            color: var(--accent-color);
+            font-size: 1.1rem;
+            margin: 0;
+            text-shadow: 0 0 8px rgba(107, 255, 180, 0.3);
+        }
+
+        .next-piece-grid {
+            width: 80px;
+            height: 80px;
+            border: 2px solid var(--grid-color);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            padding: 5px;
+        }
+
+        .next-piece-grid div {
+            width: 100%;
+            height: 100%;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .start-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1rem 2.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #6b4aff 100%);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(74, 107, 255, 0.4);
+            z-index: 10;
+        }
+
+        .start-btn:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+            box-shadow: 0 8px 25px rgba(74, 107, 255, 0.6);
+        }
+
+        .start-btn:active {
+            transform: translate(-50%, -50%) scale(0.98);
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(10px, -10px) rotate(3deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .bg-image {
+            position: absolute;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: -1;
+            transition: all 0.8s ease;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+        }
+
+        .bg-image-1 {
+            top: -100px;
+            left: -150px;
+            width: 500px;
+            height: auto;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-image-2 {
+            bottom: -120px;
+            right: -100px;
+            width: 450px;
+            height: auto;
+            animation: float 22s ease-in-out infinite reverse;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .game-over.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .game-over h2 {
+            color: var(--secondary-color);
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+
+        .game-over .restart-btn {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            color: #fff;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #ff4a4a 100%);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .game-over .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="neon-border"></div>
+        <div class="score-board">
+            分数: <span id="score">0</span>
+        </div>
+        <div class="controls">
+            操作说明：<br>
+            ← → : 左右移动<br>
+            ↑ : 旋转<br>
+            ↓ : 加速下落<br>
+            空格 : 暂停/继续
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Node modules and dependencies
+dist/
+node_modules/
+.DS_Store
+*.log
+*.tmp
+.env
+# IDE files
+.vscode/
+.idea/
+# OS generated files
+Thumbs.db
