@@ -145,6 +145,27 @@ export class Game {
         this.gameState.isPaused = !this.gameState.isPaused;
     }
 
+    /**
+     * 计算当前方块的幽灵位置（在保持X轴位置不变的情况下，向下投射到最底部的合法位置）
+     * @returns {Position} 幽灵方块的位置坐标
+     */
+    public getGhostPosition(): Position {
+        const currentX = this.currentPiece.position.x;
+        let ghostY = this.currentPiece.position.y;
+
+        // 从当前位置开始，逐步向下移动直到找到最底部的合法位置
+        while (true) {
+            const nextPosition = { x: currentX, y: ghostY + 1 };
+            if (this.isValidMove(nextPosition, this.currentPiece.blocks)) {
+                ghostY++;
+            } else {
+                break;
+            }
+        }
+
+        return { x: currentX, y: ghostY };
+    }
+
     public getState() {
         return {
             board: this.board,
